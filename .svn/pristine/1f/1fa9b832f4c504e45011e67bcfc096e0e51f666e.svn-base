@@ -1,0 +1,172 @@
+class Entity
+{
+	//用于唯一ID
+	private static increaseId:number = 0;
+
+	//归属阵营
+	public camp:string;
+
+	//角色唯一ID
+	public readonly instanceId:string;
+
+	//归属的玩家Id
+	public readonly ownerId:string;
+
+	//归属的玩家名称
+	public readonly ownerName:string;
+
+	//当前角色状态
+	public currState:FSMState;
+
+	//当前朝向
+	public currDirection:number;
+
+	//当前职业 0.玩家 1.战士 2.法师 3.道士 4.怪物
+	public job:number;
+
+	//创建顺序
+	public createSeq:number;
+
+	//所有组件
+	public readonly componentDic:Dictionary<ComponentType, ComponentBase>;
+
+	//角色内部事件管理器
+	public readonly eventDic:Dictionary<RoleEventDefine, List<(...args:any[])=>void>>;
+
+	public constructor(job:number, ownerId:string, instanceId?:string, name?:string)
+	{
+		this.job = job;
+		this.ownerId = ownerId;
+		this.instanceId = instanceId || (++Entity.increaseId).toString();
+		this.ownerName = name;
+		
+		this.componentDic = new Dictionary<ComponentType, ComponentBase>();
+		this.eventDic = new Dictionary<RoleEventDefine, List<(...args:any[])=>void>>();
+	}
+
+	//添加事件监听
+	public addEventListener(roleEvent:RoleEventDefine, func:(...args:any[])=>void, thisArg?:any):void
+	{
+		var eventList = this.eventDic.getValue(roleEvent);
+		if (!eventList)
+		{
+			eventList = new List<(...args:any[])=>void>();
+			this.eventDic.add(roleEvent, eventList);
+		}
+
+		if (!eventList.contains(func))
+			eventList.add(func.bind(thisArg));
+	}
+
+	//移除事件监听
+	public removeEventListener(roleEvent:RoleEventDefine, func:(...args:any[])=>void, thisArg?:any):void
+	{
+		var eventList = this.eventDic.getValue(roleEvent);
+		if (!!eventList)
+			eventList.removeItem(func);
+	}
+
+	//触发事件
+	public trigger(roleEvent:RoleEventDefine, ...args:any[]):void
+	{
+		var eventList = this.eventDic.getValue(roleEvent);
+		if (!eventList || eventList.count == 0)
+			return;
+
+		eventList.forEach(func => { func(args); });
+	}
+
+	//添加组件
+	public addComponent<T extends ComponentBase>(newT:new(owner:Entity, ...args:any[]) => T, ...args:any[]):T
+	{
+		var comp:T = new newT(this, args);
+		this.componentDic.add(comp.type, comp);
+
+		return comp;
+	}
+
+	//获取组件
+	public getComponent<T extends ComponentBase>(type:ComponentType):T
+	{
+		return <T>this.componentDic.getValue(type);
+	}
+
+	//初始化所有组件
+	public initAllComponent():void
+	{
+		this.componentDic.foreach(value => { value.init(); });
+	}
+
+	//移除所有组件
+	public removeAllComponent():void
+	{
+		this.componentDic.foreach(value => { value.release(); });
+		this.componentDic.clear();
+	}
+
+	//创建角色实体
+	public static createRoleEntity(roleInfo:proto.Client_RoleInfo, camp:string, ownerId:string, createSeq:number = 255, name?:string, instanceId?:string):Entity
+	{
+		var skillIdList:List<number> = new List<number>();
+		for(let i = 0; i < roleInfo.skills.length; i++)
+			skillIdList.add(roleInfo.skills[i].SkillID);
+
+		var entity:Entity = new Entity(roleInfo.job, ownerId, instanceId, name);
+
+		entity.addComponent<RoleAnimationComponent>(RoleAnimationComponent, skillIdList, roleInfo.equips);
+		entity.addComponent<BlackboardComponent>(BlackboardComponent, roleInfo.roleAttr);
+		entity.addComponent<CharacterControllerComponent>(CharacterControllerComponent);
+		entity.addComponent<FindPathComponent>(FindPathComponent);
+		entity.addComponent<RoleBattleComponent>(RoleBattleComponent, skillIdList);
+
+		entity.camp = camp;
+		entity.createSeq = createSeq;
+		entity.initAllComponent();
+
+		return entity;
+	}
+
+	//创建怪物实体
+	public static createMonsterEntity(monsterId:number, camp?:string, ownerId?:string, name?:string, instanceId?:string):Entity
+	{
+		var unitTp = TempleMgr.select<data.UnitTemple>("UnitTemple", monsterId);
+		var attrArr:Array<number> = new Array(data.RoleAttr.MAX);
+		for(let i = 0; i < data.RoleAttr.MAX; i++)
+			attrArr[i] = 0;
+
+		for(let i = 0; i < unitTp.num.length; i++)
+			attrArr[unitTp.num[i]] = unitTp.Value[i];
+
+		var skillTpList = TempleMgr.selectAll<data.SkillTemple>("SkillTemple");
+
+		var skillIdList:List<number> = new List<number>();
+		for(let j = 0; j < unitTp.skills.length; j++)
+		{
+			if (unitTp.skills[j] == 0)
+				continue;
+
+			let skillTp = TempleMgr.getSkillTp(unitTp.skills[j], unitTp.startSkilllevel[j]);
+			if (!skillTp)
+			{
+				console.log("createMonsterEntity skillTp == null group: " + unitTp.skills[j] + " level: " + unitTp.startSkilllevel[j]);
+				continue;
+			}
+
+			skillIdList.add(skillTp.ID);
+		}
+
+		var entity:Entity = new Entity(JobDefine.Monster, ownerId || CampDefine.Monster, instanceId, name || unitTp.name);
+
+		entity.addComponent<MonsterAnimationComponent>(MonsterAnimationComponent, skillIdList, monsterId);
+		entity.addComponent<BlackboardComponent>(BlackboardComponent, attrArr, monsterId);
+		entity.addComponent<CharacterControllerComponent>(CharacterControllerComponent);
+		entity.addComponent<FindPathComponent>(FindPathComponent);
+		entity.addComponent<MonsterBattleComponent>(MonsterBattleComponent, skillIdList, monsterId);
+
+		entity.camp = camp || CampDefine.Monster;
+		entity.createSeq = 255;
+		entity.initAllComponent();
+
+		return entity;
+	}
+}

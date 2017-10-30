@@ -1,0 +1,115 @@
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+//野蛮冲撞技能
+var HitSkill = (function (_super) {
+    __extends(HitSkill, _super);
+    function HitSkill() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    //获取技能目标列表
+    HitSkill.prototype.getSkillTargetList = function (target, sx, sy, tx, ty) {
+        return new List(new Array(target));
+    };
+    //是否能使用技能 只有在水平、垂直、斜线方向
+    HitSkill.prototype.canUseSkill = function (tx, ty) {
+        var blackboardComp = this.owner.getComponent(ComponentType.Blackboard);
+        var sx = blackboardComp.getAttrValue(data.RoleAttr.x);
+        var sy = blackboardComp.getAttrValue(data.RoleAttr.y);
+        if (sx == tx && sy == ty)
+            return false;
+        var vecX = tx - sx;
+        var vecY = ty - sy;
+        var distanceX = vecX < 0 ? -vecX : vecX;
+        var distanceY = vecY < 0 ? -vecY : vecY;
+        if (distanceX == distanceY || distanceX == 0 || distanceY == 0) {
+            var pathList = MapModule.findPath(sx, sy, tx, ty, 1);
+            if (!pathList || pathList.count == 0)
+                return false;
+            //检查冲撞路径内是否有阻挡
+            var isBlock = false;
+            pathList.forEach(function (mapCell) { if (!mapCell.isOpen)
+                isBlock = true; });
+            if (isBlock)
+                return false;
+            return true;
+        }
+        return false;
+    };
+    //释放技能
+    HitSkill.prototype.castSkill = function (target) {
+        if (this.isCastSkill)
+            return;
+        var selfComp = this.owner.getComponent(ComponentType.Blackboard);
+        var targetComp = target.getComponent(ComponentType.Blackboard);
+        this.skillConsume(selfComp);
+        var damageInfoList = this.useSkill(selfComp, targetComp);
+        if (!damageInfoList || damageInfoList.count == 0)
+            return;
+        var sx = selfComp.getAttrValue(data.RoleAttr.x);
+        var sy = selfComp.getAttrValue(data.RoleAttr.y);
+        var tx = targetComp.getAttrValue(data.RoleAttr.x);
+        var ty = targetComp.getAttrValue(data.RoleAttr.y);
+        var pathList = MapModule.findPath(sx, sy, tx, ty, 1);
+        if (!!pathList || pathList.count == 0)
+            return;
+        var effectArgList = this.skillEffectArgumentsDic.getValue(SkillEffect.HitMove);
+        if (!effectArgList || effectArgList.count == 0) {
+            console.error("HitSkill castSkill effectArgList.count == 0");
+            return;
+        }
+        //先冲撞到目标面前
+        var cell = pathList.deQueueLast();
+        //冲撞距离和攻击距离相同，将只播放特效无位移
+        var targetPt = this.getHitMovePt(cell.X, cell.Y, tx, ty, effectArgList[0] - pathList.count);
+        selfComp.setAttrValue(data.RoleAttr.x, targetPt.x);
+        selfComp.setAttrValue(data.RoleAttr.y, targetPt.y);
+        damageInfoList.forEach(function (damageInfo) { damageInfo.hitPt.x = targetPt.x; damageInfo.hitPt.y = targetPt.y; });
+        ModuleEventMgr.instance.triger(new RoleMoveEvent(this.owner, new egret.Point(sx, sy), targetPt));
+        return damageInfoList;
+    };
+    //返回撞击目标点
+    HitSkill.prototype.getHitMovePt = function (sx, sy, tx, ty, distance) {
+        var vecX = tx - sx;
+        var vecY = ty - sy;
+        var distanceX = vecX < 0 ? -vecX : vecX;
+        var distanceY = vecY < 0 ? -vecY : vecY;
+        var targetPt = new egret.Point(sx, sy);
+        //在斜线方向 以当前方向击退X格
+        if (distanceX == distanceY) {
+            for (var i = 1; i <= distance; i++) {
+                var x = tx + (vecX < 0 ? -i : i);
+                var y = ty + (vecY < 0 ? -i : i);
+                if (MapModule.isBlock(x, y))
+                    break;
+                targetPt.x = x;
+                targetPt.y = y;
+            }
+        }
+        else if (distanceY == 0) {
+            for (var i = 1; i <= distance; i++) {
+                var x = tx + (vecX < 0 ? -i : i);
+                if (MapModule.isBlock(x, sy))
+                    break;
+                targetPt.x = x;
+            }
+        }
+        else {
+            for (var i = 1; i <= distance; i++) {
+                var y = ty + (vecY < 0 ? -i : i);
+                if (MapModule.isBlock(sx, y))
+                    break;
+                targetPt.y = y;
+            }
+        }
+        return targetPt;
+    };
+    return HitSkill;
+}(SkillBase));
+__reflect(HitSkill.prototype, "HitSkill");
+//# sourceMappingURL=HitSkill.js.map

@@ -1,0 +1,54 @@
+//召唤技能
+class SummonSkill extends SkillBase
+{
+    //技能召唤实体ID
+    protected get getSummonEntityInstId() { return this.owner.instanceId + "_summon"; } 
+
+    //是否可以释放此技能
+	public isCastSkill():boolean
+	{
+        return super.isCastSkill() && !EntityMgr.Instance.getEntity(this.getSummonEntityInstId);
+	}
+
+    //释放技能
+	public castSkill(target:Entity):List<DamageInfoEvent>
+    {
+        if (this.isCastSkill)
+            return;
+
+        var selfComp = this.owner.getComponent<BlackboardComponent>(ComponentType.Blackboard);       
+        
+        this.skillConsume(selfComp);
+
+        var x = selfComp.getAttrValue(data.RoleAttr.x);
+        var y = selfComp.getAttrValue(data.RoleAttr.y);
+
+        var cellList = MapModule.getRandomCell(x, y, 1);
+        if (!cellList || cellList.count == 0)
+        {
+            console.error("SummonSkill cellList == null");
+            return;
+        }
+
+        var effectArgList = this.skillEffectArgumentsDic.getValue(SkillEffect.Summon);
+        if (effectArgList == null || effectArgList.count == 0)
+        {
+            console.log("SummonSkill effectArgList == null");
+            return;
+        }
+
+        var summonEntity = Entity.createMonsterEntity(effectArgList[0], this.owner.camp, this.owner.ownerId, null, this.getSummonEntityInstId);
+
+        var summonComp = summonEntity.getComponent<BlackboardComponent>(ComponentType.Blackboard);
+        var roleEntityInfo = new proto.RoleEntityInfo().init(summonEntity.job, summonEntity.instanceId, effectArgList[0], summonComp.attrArr, null);
+        
+        ModuleEventMgr.instance.triger(new CreateEntityEvent(summonEntity, cellList.getItem(0).toPoint(), roleEntityInfo));
+        return null;
+    }
+
+    //获取技能目标列表
+	protected getSkillTargetList(target:BlackboardComponent, sx:number, sy:number, tx:number, ty:number):List<BlackboardComponent>
+    {
+        return null;
+    }
+}

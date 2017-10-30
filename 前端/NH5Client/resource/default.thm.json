@@ -1,0 +1,16 @@
+{
+  "skins": {},
+  "autoGenerateExmlsList": true,
+  "exmls": [
+    "resource/assets/default/CheckBoxSkin.exml",
+    "resource/assets/default/HScrollBarSkin.exml",
+    "resource/assets/default/RadioButtonSkin.exml",
+    "resource/assets/map/default/HScrollBarSkin.exml",
+    "resource/assets/default/VScrollBarSkin.exml",
+    "resource/assets/map/default/VScrollBarSkin.exml",
+    "resource/assets/default/ScrollerSkin.exml",
+    "resource/assets/map/default/CheckBoxSkin.exml",
+    "resource/assets/map/default/RadioButtonSkin.exml",
+    "resource/assets/map/default/ScrollerSkin.exml"
+  ]
+}

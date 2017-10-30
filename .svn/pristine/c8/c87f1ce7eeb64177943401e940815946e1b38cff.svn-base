@@ -1,0 +1,50 @@
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+/**
+ * 模块间事件管理器
+ */
+var ModuleEventMgr = (function () {
+    function ModuleEventMgr() {
+        this.eventDic = new Dictionary();
+    }
+    /**
+     * 侦听事件
+     */
+    ModuleEventMgr.prototype.addModuleEventListener = function (eventType, func, eventThis) {
+        var arr = this.eventDic.getValue(eventType);
+        if (!!arr) {
+            arr.push({ _this: eventThis, _func: func });
+            return;
+        }
+        this.eventDic.add(eventType, [{ _this: eventThis, _func: func }]);
+    };
+    /**
+     * 派发事件
+     */
+    ModuleEventMgr.prototype.triger = function (eventBase) {
+        var arr = this.eventDic.getValue(eventBase.id);
+        if (!!arr) {
+            for (var i = 0; i < arr.length; i++) {
+                arr[i]["_func"].call(arr[i]["_this"], eventBase);
+            }
+        }
+    };
+    /**
+     * 移除事件
+     */
+    ModuleEventMgr.prototype.removeModuleEventListener = function (eventType, func, argThis) {
+        var arr = this.eventDic.getValue(eventType);
+        if (!!arr) {
+            for (var i = arr.length - 1; i >= 0; i--) {
+                if (arr[i]["_this"] == argThis && arr[i]["_func"] == func)
+                    arr.splice(i, 1);
+            }
+        }
+    };
+    return ModuleEventMgr;
+}());
+//模块事件管理器单例
+ModuleEventMgr.instance = new ModuleEventMgr();
+__reflect(ModuleEventMgr.prototype, "ModuleEventMgr");
+//# sourceMappingURL=ModuleEventMgr.js.map

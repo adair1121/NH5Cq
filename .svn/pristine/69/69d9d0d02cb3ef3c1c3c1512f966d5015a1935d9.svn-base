@@ -1,0 +1,142 @@
+abstract class EventBase
+{
+	public abstract get id();
+
+	public constructor() {}
+}
+
+enum ModuleEvent
+{
+	RoleMove, //角色移动
+	HpTips, //掉血Tips
+	DamageInfo, //伤害信息
+	CreateEntity, //创建实体
+	EnterScene, //进入场景
+	PlayState, //播放通用状态
+	PlayAtkState, //播放攻击状态
+}
+
+//在事件定义中，字段必须使用readonly，避免外面可修改
+class RoleMoveEvent extends EventBase
+{
+	public get id() { return ModuleEvent.RoleMove; }
+
+	//坐标点 ptFrom:从哪个点 ptTo:移动到哪个点
+	public readonly who:Entity;
+	public readonly ptFrom:egret.Point;
+	public readonly ptTo:egret.Point;
+
+	public constructor(who:Entity, from:egret.Point, to:egret.Point)
+	{
+		super();
+
+		this.who = who;
+		this.ptFrom = from;
+		this.ptTo = to;
+	}
+}
+
+//Buff +/-血时调用
+class HpTipsEvent extends EventBase
+{
+	public get id() { return ModuleEvent.HpTips; }
+
+	//血量改变的数值
+	public readonly who:Entity;
+	public readonly value:number;
+
+	public constructor(who:Entity, value:number)
+	{
+		super();
+
+		this.who = who;
+		this.value = value;
+	}
+}
+
+//技能伤害时调用
+class DamageInfoEvent extends EventBase
+{
+	public get id() { return ModuleEvent.DamageInfo; }
+
+	public readonly who:Entity; //谁受到伤害
+	public readonly damageValue:number; //伤害多少
+	public readonly addBuffIdList:List<number>; //附加了什么Buff
+	public readonly removeBuffIdList:List<number>; //移除了什么Buff
+	public readonly isDead:boolean; //是否死亡
+	public readonly hitPt:egret.Point; //冲撞到什么位置
+	public readonly rockClip:egret.MovieClip; //受击动画
+
+	public constructor(who:Entity, damageValue:number, addBuffIdList:List<number>, removeBuffIdList:List<number>, isDead:boolean, hitPt?:egret.Point)
+	{
+		super();
+
+		this.who = who;
+		this.damageValue = damageValue;
+		this.addBuffIdList = addBuffIdList;
+		this.removeBuffIdList = removeBuffIdList;
+		this.isDead = isDead;
+		this.hitPt = hitPt;
+	}
+}
+
+//创建角色实体
+class CreateEntityEvent extends EventBase
+{
+	public get id() { return ModuleEvent.EnterScene; }
+
+	public readonly who:Entity; //创建的实体
+	public readonly pos:egret.Point; //创建位置
+
+	public constructor(who:Entity, pos:egret.Point)
+	{
+		super();
+
+		this.who = who;
+		this.pos = pos;
+	}
+}
+
+//播放通用状态
+class PlayStateEvent extends EventBase
+{
+	public get id() { return ModuleEvent.PlayState; }
+
+	public readonly who:Entity; //谁播放动画
+	public readonly state:FSMState; //当前状态
+	public readonly direction:number; //朝向
+
+	public constructor(who:Entity, state:FSMState, direction:number)
+	{
+		super();
+
+		this.who = who;
+		this.state = state;
+		this.direction = direction;
+	}
+}
+
+//播放攻击状态
+class PlayAtkStateEvent extends EventBase
+{
+	public get id() { return ModuleEvent.PlayAtkState; }
+
+	public readonly who:Entity;//谁放了技能
+	public readonly target:Entity; //目标是谁
+	public readonly skillTp:data.SkillTemple; //技能模版
+	public readonly direction:number; //朝向
+	public readonly skillClip:egret.MovieClip; //技能动画
+	public readonly flyClip:egret.MovieClip; //飞行动画
+
+	public constructor(who:Entity, target:Entity, skillTp:data.SkillTemple, direction:number, skillClip:egret.MovieClip, flyClip:egret.MovieClip)
+	{
+		 super();
+
+		 this.who = who;
+		 this.target = target;
+		 this.skillTp = skillTp;
+		 this.direction = direction;
+		 this.skillClip = skillClip;
+		 this.flyClip = flyClip;
+	}
+}

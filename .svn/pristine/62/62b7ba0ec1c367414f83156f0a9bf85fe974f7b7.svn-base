@@ -1,0 +1,175 @@
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var SceneModule;
+(function (SceneModule) {
+    var viewMapBg;
+    var mapBlockDic;
+    //创建场景
+    function createScene(mapId) {
+        var battleScene = new BattleScene();
+        battleScene.init(mapId);
+    }
+    SceneModule.createScene = createScene;
+    //加载地图
+    function loadMap(mapId) {
+        viewMapBg = new egret.Sprite();
+        mapBlockDic = new Dictionary();
+        var mapInfo = MapModule.getMapInfo(mapId);
+        viewMapBg.width = mapInfo.width;
+        viewMapBg.height = mapInfo.height;
+        createMapBlock(mapInfo);
+        var roleBirthPoint = new egret.Point(6, 16);
+        var topP = judgePoint(roleBirthPoint, mapInfo);
+        ViewController.instance.addMapView(viewMapBg, topP.x, topP.y, "mapBlock");
+        var windowBlockAreaX = Math.ceil(Config.w_width / Config.mapBlockWidth) + 2;
+        var windowBlockAreaY = Math.ceil(Config.w_height / Config.mapBlockHeight) + 2;
+        var topGrid = PosUtils.pixelToGrid(topP.x < 0 ? -topP.x : 0, topP.y < 0 ? -topP.y : 0);
+        var p = PosUtils.gridToMapGrid(topGrid.x, topGrid.y);
+        var firstX = p.x - 1, firstY = p.y - 1;
+        for (var i = 0; i < windowBlockAreaX; i++) {
+            for (var j = 0; j < windowBlockAreaY; j++) {
+                var index = (firstY + i) * blockRowCount + (firstX + j);
+                var block = mapBlockDic.getValue(index);
+                if (!!block) {
+                }
+            }
+        }
+    }
+    function judgePoint(gridPoint, mapInfo) {
+        var rolePixelPoint = PosUtils.gridToPixel(gridPoint.x, gridPoint.y);
+        var topP = new egret.Point();
+        if (rolePixelPoint.x < (Config.w_width >> 1)) {
+            topP.x = 0;
+        }
+        else if (mapInfo.width - rolePixelPoint.x < (Config.w_width >> 1)) {
+            topP.x = -(mapInfo.width - Config.w_width);
+        }
+        else {
+            topP.x = -(rolePixelPoint.x - (Config.w_width >> 1));
+        }
+        if (rolePixelPoint.y < (Config.w_height >> 1)) {
+            topP.y = 0;
+        }
+        else if (mapInfo.height - rolePixelPoint.y < (Config.w_height >> 1)) {
+            topP.y = -(mapInfo.height - Config.w_height);
+        }
+        else {
+            topP.y = -(rolePixelPoint.y - (Config.w_height >> 1));
+        }
+        return topP;
+    }
+    var blockRowCount;
+    function createMapBlock(mapInfo) {
+        blockRowCount = Math.ceil(mapInfo.height / Config.mapBlockHeight);
+        var blockColCount = Math.ceil(mapInfo.width / Config.mapBlockWidth);
+        for (var x = 0; x < blockColCount; x++) {
+            for (var y = 0; y < blockRowCount; y++) {
+                var mapBlock = new MapBlock(x, y, x * blockRowCount + y);
+                viewMapBg.addChild(mapBlock);
+                mapBlock.width = mapBlock.height = Config.mapBlockWidth;
+                mapBlock.x = x * Config.mapBlockWidth;
+                mapBlock.y = y * Config.mapBlockHeight;
+                mapBlockDic.add(mapBlock.Index, mapBlock);
+            }
+        }
+    }
+    //战斗场景
+    var BattleScene = (function () {
+        function BattleScene() {
+            this.roleStayDic = new Dictionary();
+        }
+        Object.defineProperty(BattleScene, "currMapId", {
+            get: function () { return this.mapId; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(BattleScene, "currTickCount", {
+            get: function () { return this.tickCount; },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(BattleScene, "currTime", {
+            get: function () { return this.tickCount * BattleScene.fixTime; },
+            enumerable: true,
+            configurable: true
+        });
+        //初始化场景
+        BattleScene.prototype.init = function (mapId, monsterIdList) {
+            ModuleEventMgr.instance.addModuleEventListener(ModuleEvent.RoleMove, this.roleMove, this);
+            ModuleEventMgr.instance.addModuleEventListener(ModuleEvent.CreateEntity, this.createEntity);
+            BattleScene.mapId = mapId;
+            loadMap(mapId);
+            //this.entityMgr.addEntity(RoleInstance.create());
+            //viewMapBg.instance.init();
+        };
+        BattleScene.prototype.release = function () {
+            ModuleEventMgr.instance.removeModuleEventListener(ModuleEvent.RoleMove, this.roleMove, this);
+            ModuleEventMgr.instance.removeModuleEventListener(ModuleEvent.CreateEntity, this.createEntity);
+            this.roleStayDic.foreach(function (cell) { return cell.isOpen = true; });
+            this.roleStayDic.clear();
+            EntityMgr.Instance.clear();
+            //viewMapBg.instance.release();
+        };
+        //角色移动
+        BattleScene.prototype.roleMove = function (roleMove) {
+            var fromCell = MapModule.getMapCellByPoint(roleMove.ptFrom, BattleScene.mapId);
+            var toCell = MapModule.getMapCellByPoint(roleMove.ptTo, BattleScene.mapId);
+            if (!!fromCell) {
+                fromCell.isOpen = true;
+                this.roleStayDic.remove(fromCell.Index);
+            }
+            if (!!toCell) {
+                toCell.isOpen = false;
+                this.roleStayDic.add(toCell.Index, toCell);
+            }
+        };
+        //创建实体
+        BattleScene.prototype.createEntity = function (createEntity) {
+            var entity = createEntity.who;
+            var blackboardComp = entity.getComponent(ComponentType.Blackboard);
+            blackboardComp.setAttrValue(data.RoleAttr.x, createEntity.pos.x);
+            blackboardComp.setAttrValue(data.RoleAttr.y, createEntity.pos.y);
+            blackboardComp.setAttrValue(data.RoleAttr.HP, blackboardComp.getAttrValue(data.RoleAttr.MHP));
+            blackboardComp.setAttrValue(data.RoleAttr.MP, blackboardComp.getAttrValue(data.RoleAttr.MMP));
+            EntityMgr.Instance.addEntity(entity);
+        };
+        return BattleScene;
+    }());
+    //固定帧更新时间 毫秒
+    BattleScene.fixTime = 100;
+    SceneModule.BattleScene = BattleScene;
+    __reflect(BattleScene.prototype, "SceneModule.BattleScene");
+    var MapBlock = (function (_super) {
+        __extends(MapBlock, _super);
+        function MapBlock(mx, my, index) {
+            var _this = _super.call(this) || this;
+            _this.X = mx;
+            _this.Y = my;
+            _this.Index = index;
+            return _this;
+            // this.initView(path);
+        }
+        Object.defineProperty(MapBlock.prototype, "resPath", {
+            get: function () { return ""; },
+            enumerable: true,
+            configurable: true
+        });
+        MapBlock.prototype.loadMapBlock = function (isAdd) {
+            var _this = this;
+            if (!this.bitmap)
+                AssetsMgr.instance.loadSinglePicture(this.resPath, function (bmp) {
+                    _this.bitmap = bmp;
+                    _this.addChild(bmp);
+                }, this);
+        };
+        return MapBlock;
+    }(egret.Sprite));
+    __reflect(MapBlock.prototype, "MapBlock");
+})(SceneModule || (SceneModule = {}));
+//# sourceMappingURL=SceneModule.js.map

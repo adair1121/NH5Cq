@@ -1,0 +1,1 @@
+module data{	export interface GuildDonateTemple{		/**		* id		*/		id:number;		/**		* 捐献类型图标		*/		icon:number;		/**		* 捐献说明		*/		information:string;		/**		* 捐献消耗属性类型		*/		donateType:number;		/**		* 捐献消耗金额		*/		donateMoney:number;		/**		* 增加个人贡献		*/		addCont:number;		/**		* 增加帮会资金		*/		addFactionMoney:number;		/**		* 捐献次数		*/		donateNumber:number;	}}

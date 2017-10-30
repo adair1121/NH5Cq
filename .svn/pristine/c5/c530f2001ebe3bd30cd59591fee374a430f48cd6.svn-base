@@ -1,0 +1,42 @@
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+//寻路组件
+var FindPathComponent = (function (_super) {
+    __extends(FindPathComponent, _super);
+    function FindPathComponent() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Object.defineProperty(FindPathComponent.prototype, "type", {
+        //组件类型
+        get: function () { return ComponentType.FindPath; },
+        enumerable: true,
+        configurable: true
+    });
+    //初始化组件
+    FindPathComponent.prototype.init = function () {
+        this.findQueue = new Queue();
+    };
+    //释放组件
+    FindPathComponent.prototype.release = function () {
+        this.findQueue.clear();
+        this.findQueue = null;
+    };
+    //获取向目标移动的下一个格子
+    FindPathComponent.prototype.getNextMoveCell = function (toPoint, selfPos, distance) {
+        //如果目标位置没有发生改变，而且行进路径的下个点没有人占据，将直接返回路径的下一个点
+        if (this.findQueue.count > 0 && (!!this.ptTarget && this.ptTarget.x == toPoint.x && this.ptTarget.y == toPoint.y) && this.findQueue.getPeek().isOpen)
+            return this.findQueue.deQueue().toPoint();
+        this.findQueue.clear();
+        this.findQueue = MapModule.findPath(selfPos.x, selfPos.y, toPoint.x, toPoint.y, distance);
+        return this.findQueue.deQueue().toPoint();
+    };
+    return FindPathComponent;
+}(ComponentBase));
+__reflect(FindPathComponent.prototype, "FindPathComponent");
+//# sourceMappingURL=FindPathComponent.js.map

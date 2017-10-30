@@ -1,0 +1,19 @@
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+//状态基类
+var StateBase = (function () {
+    //构造
+    function StateBase(owner) {
+        this.owner = owner;
+    }
+    //进入状态
+    StateBase.prototype.OnEnter = function (args) { };
+    //执行状态
+    StateBase.prototype.OnExcuter = function (deltaTime) { };
+    //离开状态
+    StateBase.prototype.OnLeave = function () { };
+    return StateBase;
+}());
+__reflect(StateBase.prototype, "StateBase");
+//# sourceMappingURL=StateBase.js.map

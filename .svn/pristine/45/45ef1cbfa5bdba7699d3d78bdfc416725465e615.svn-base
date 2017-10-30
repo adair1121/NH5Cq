@@ -1,0 +1,49 @@
+/**
+ * 模块间事件管理器
+ */
+class ModuleEventMgr {
+	//模块事件管理器单例
+	public static readonly instance:ModuleEventMgr = new ModuleEventMgr();
+	private readonly eventDic:Dictionary<ModuleEvent, Array<()=>void>> = new Dictionary<ModuleEvent,Array<()=>void>>();
+	public constructor() {
+
+	}
+	/**
+	 * 侦听事件
+	 */
+	public addModuleEventListener(eventType:ModuleEvent, func:(arg:EventBase) => void, eventThis?:any):void{
+		var arr:Array<Object> = this.eventDic.getValue(eventType);
+		if(!!arr){
+			arr.push(func.bind(eventThis));
+			return;
+		}
+		this.eventDic.add(eventType, [func.bind(eventThis)]);
+	}
+	/**
+	 * 派发事件
+	 */
+	public triger<T extends EventBase>(eventBase:T):void{
+		var arr:Array<()=>void> = this.eventDic.getValue(eventBase.id);
+		if(!!arr){
+			for(var i:number = 0;i<arr.length;i++){
+				arr[i].call(<T>eventBase);
+			}
+		}
+	}
+	/**
+	 * 移除事件
+	 */
+	public removeModuleEventListener(eventType:ModuleEvent, func:(arg:EventBase) => void, argThis?:any):void{
+		var arr:Array<()=>void> = this.eventDic.getValue(eventType);
+		if (!!arr)
+		{
+			for(var i:number = arr.length-1; i>=0; i--)
+			{
+				// if (arr[i]["_this"] == argThis && arr[i] == func)
+				// 	arr.splice(i, 1);
+				if (arr[i] == func)
+					arr.splice(i, 1);
+			}
+		}
+	}
+}

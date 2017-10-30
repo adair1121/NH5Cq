@@ -1,0 +1,161 @@
+//动画组件
+class AnimatorComponent extends ComponentBase
+{
+	//通过技能ID和方向查询
+	private movieClipDic:Dictionary<number, Dictionary<number, List<egret.MovieClip>>>;
+
+	//组件类型
+	public get type():ComponentType { return ComponentType.Animator; }
+
+	//角色状态机
+	public readonly fsm:FSM;
+
+	//构造 [0]:技能ID数组
+	public constructor(owner:Entity, arg:any[])
+	{
+		super(owner);
+
+		this.fsm = new FSM(owner);
+
+		this.movieClipDic = new Dictionary<number, Dictionary<number, List<egret.MovieClip>>>();
+
+		var skillIdList = arg[0] as List<number>;
+		if (!skillIdList)
+			return;
+
+		skillIdList.forEach(id => { this.loadSkill(id); }, this);
+
+		this.init();
+	}
+
+	//初始化组件
+	public init():void
+	{
+		this.owner.addEventListener(RoleEventDefine.ChangeState, this.RoleChangeState, this);
+		this.owner.addEventListener(RoleEventDefine.PlayAnimation, this.playAnimation, this);
+		this.owner.addEventListener(RoleEventDefine.PlayAtkAnimation, this.playAtkAnimation, this);
+		this.owner.addEventListener(RoleEventDefine.DamageInfo, this.DamageInfo, this);
+
+		this.fsm.switchTo(FSMState.Idle);
+	}
+
+	//释放组件
+	public release():void
+	{
+		this.owner.removeEventListener(RoleEventDefine.ChangeState, this.RoleChangeState, this);
+		this.owner.removeEventListener(RoleEventDefine.PlayAnimation, this.playAnimation, this);
+		this.owner.removeEventListener(RoleEventDefine.PlayAtkAnimation, this.playAtkAnimation, this);
+		this.owner.removeEventListener(RoleEventDefine.DamageInfo, this.DamageInfo, this);
+
+		this.movieClipDic.foreach(directionDic =>
+		{
+			directionDic.clear();
+		});
+
+		this.movieClipDic.clear();
+		this.movieClipDic = null;
+	}
+
+	//角色状态改变 [0]:改变成哪个状态 [1]:参数
+	public RoleChangeState(args:any[]):void
+	{
+		if (!args || args.length < 1)
+			return;
+
+		var state:FSMState = args.shift();
+		if (!!this.fsm.switchTo(state, args))
+			this.owner.currState = state;
+	}
+
+	//播放通用动画 [0]:状态 [1]:朝向
+	public playAnimation(args:any[]):void
+	{
+		if (!args || args.length < 2)
+		{
+			console.error("AnimatorComponent playAnimation args.length < 2");
+			return;
+		}
+
+		var state:FSMState = args[0] as FSMState;
+		var direction:number = args[1] as number;
+
+		ModuleEventMgr.instance.triger(new PlayStateEvent(this.owner, state, direction));
+	}
+	//播放攻击动画 [0]:技能模版 [1]:朝向 [2]:目标
+	public playAtkAnimation(args:any[]):void
+	{
+		if (!args || args.length < 3)
+		{
+			console.error("AnimatorComponent playAnimation args.length < 3");
+			return;
+		}
+
+		var skillTp:data.SkillTemple = args[0] as data.SkillTemple;
+		var direction:number = args[1] as number;
+		var target:Entity = args[2] as Entity;
+
+		var skillClipList = this.getMovieClipList(skillTp, direction);
+		ModuleEventMgr.instance.triger(new PlayAtkStateEvent(this.owner, target, skillTp, direction, 
+			skillClipList.getItem(SkillClipDefine.SkillRes), skillClipList.getItem(SkillClipDefine.FlyRes)));
+	}
+
+	//伤害信息
+	public DamageInfo(args:any[]):void
+	{
+
+	}
+
+	//加载技能动画
+	private loadSkill(skillId:number):void
+	{
+		var skillTp:data.SkillTemple = TempleMgr.select<data.SkillTemple>("SkillTemple", skillId);
+		if (!skillTp)
+			return;
+		//技能特效不分男女,模版未改
+		if (skillTp.skillResIdMan > 0)
+			this.loadMovieClip(skillTp.ID, SkillClipDefine.SkillRes, AssetsDefine.MoviePath, skillTp.skillResIdMan, AssetsDefine.effect + AssetsDefine.AtkRule);
+
+		if (skillTp.skillResIdFly > 0)
+			this.loadMovieClip(skillTp.ID, SkillClipDefine.FlyRes, AssetsDefine.MoviePath, skillTp.skillResIdFly, AssetsDefine.effect + AssetsDefine.AtkRule);
+
+		if (skillTp.skillResIdRock > 0)
+			this.loadMovieClip(skillTp.ID, SkillClipDefine.RockRes, AssetsDefine.MoviePath, skillTp.skillResIdRock, AssetsDefine.effect + AssetsDefine.AtkRule);
+	}
+
+	//加载动画
+	private loadMovieClip(skillId:number, resIndex:SkillClipDefine, filePath:string, id:number, rule:string):void
+	{
+		AssetsMgr.instance.loadMovieGroup(filePath, id, rule, dic =>
+		{
+			let skillClipDic = this.movieClipDic.getValue(skillId);
+			if (!skillClipDic)
+			{
+				skillClipDic = new Dictionary<number, List<egret.MovieClip>>();
+				this.movieClipDic.add(skillId, skillClipDic);
+			}
+
+			dic.foreach((clip, direction) =>
+			{
+				let clipList = skillClipDic.getValue(direction);
+				if (!clipList)
+				{
+					clipList = new List<egret.MovieClip>();
+					skillClipDic.add(direction, clipList);
+				}
+
+				clipList.setItem(resIndex, clip);
+			});
+
+		}, this);
+	}
+
+	//通过技能ID和朝向获取技能动画
+	private getMovieClipList(skillTp:data.SkillTemple, direction:number):List<egret.MovieClip>
+	{
+		var skillClipDic = this.movieClipDic.getValue(skillTp.ID);
+		if (!!skillClipDic)
+			return skillClipDic.getValue(direction);
+
+		return null;
+	}
+}

@@ -1,0 +1,201 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Egret</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="full-screen" content="true"/>
+    <meta name="screen-orientation" content="portrait"/>
+    <meta name="x5-fullscreen" content="true"/>
+    <meta name="360-fullscreen" content="true"/>
+	<meta HTTP-EQUIV="pragma" CONTENT="no-cache"/> 
+	<meta HTTP-EQUIV="Cache-Control" CONTENT="no-cache,must-revalidate"/>
+	<meta HTTP-EQUIV="expires" CONTENT="0"/>
+    <style>
+        html, body {
+            -ms-touch-action: none;
+            background: #000000;
+            padding: 0;
+            border: 0;
+            margin: 0;
+            height: 100%;
+        }
+    </style>
+
+    <!--这个标签为通过egret提供的第三方库的方式生成的 javascript 文件。删除 modules_files 标签后，库文件加载列表将不会变化，请谨慎操作！-->
+    <!--modules_files_start-->
+	<script egret="lib" src="libs/modules/egret/egret.js" src-release="libs/modules/egret/egret.min.js"></script>
+	<script egret="lib" src="libs/modules/egret/egret.web.js" src-release="libs/modules/egret/egret.web.min.js"></script>
+	<script egret="lib" src="libs/modules/game/game.js" src-release="libs/modules/game/game.min.js"></script>
+	<script egret="lib" src="libs/modules/res/res.js" src-release="libs/modules/res/res.min.js"></script>
+	<script egret="lib" src="libs/modules/eui/eui.js" src-release="libs/modules/eui/eui.min.js"></script>
+	<script egret="lib" src="libs/modules/tween/tween.js" src-release="libs/modules/tween/tween.min.js"></script>
+	<script egret="lib" src="libs/modules/socket/socket.js" src-release="libs/modules/socket/socket.min.js"></script>
+	<!--modules_files_end-->
+
+    <!--这个标签为不通过egret提供的第三方库的方式使用的 javascript 文件，请将这些文件放在libs下，但不要放在modules下面。-->
+    <!--other_libs_files_start-->
+    <script egret="lib" src="polyfill/promise.js" src-release="polyfill/promise.min.js"></script>
+    <!--other_libs_files_end-->
+    <!--这个标签会被替换为项目中所有的 javascript 文件。删除 game_files 标签后，项目文件加载列表将不会变化，请谨慎操作！-->
+    <!--game_files_start-->
+	<script egret="game" src="bin-debug/fight/Entity/ComponentBase.js"></script>
+	<script egret="game" src="bin-debug/utils/Dictionary.js"></script>
+	<script egret="game" src="bin-debug/fight/Entity/AnimatorComponent.js"></script>
+	<script egret="game" src="bin-debug/data/proto/Pro.js"></script>
+	<script egret="game" src="bin-debug/data/temple/Temple.js"></script>
+	<script egret="game" src="bin-debug/fight/Buff/BuffBase.js"></script>
+	<script egret="game" src="bin-debug/config/Config.js"></script>
+	<script egret="game" src="bin-debug/fight/Entity/BattleComponent.js"></script>
+	<script egret="game" src="bin-debug/utils/List.js"></script>
+	<script egret="game" src="bin-debug/fight/FSM/StateBase.js"></script>
+	<script egret="game" src="bin-debug/fight/Skill/SkillBase.js"></script>
+	<script egret="game" src="bin-debug/data/proto/MessageHandle.js"></script>
+	<script egret="game" src="bin-debug/data/temple/TitleTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/BuffTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/ChargeTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/CheatsInlayTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/CheatsOpenTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/CheatsTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/ContinueChargeTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/Day7TargetTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/DragonSoulTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/DropItemTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/DropTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/EquipTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/ExperienceTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/FashionTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/FeatureTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/FilterWordTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/FirstChargeTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/GemstoneTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/GlobalDefineTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/GridrateTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/GridTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/GuildBattleTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/GuildDonateTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/GuildDutyTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/GuildSkillTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/GuildTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/HumenTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/InitializeTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/ItemTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/JingMaiTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/JobInitTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/LevelStageTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/LevelTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/MailTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/MapTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/MeetBattleTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/MonsterAITemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/MonsterTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/MonthCardTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/OpenServerGiftBagTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/PeerageTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/RankTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/RebornBossTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/RebornTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/RoleInitTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/ScoreTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/ShieldTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/ShopTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/SkillTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/StrengthenTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/TalismanTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/TaskTemple.js"></script>
+	<script egret="game" src="bin-debug/data/DataCenter.js"></script>
+	<script egret="game" src="bin-debug/base/ButtonBase.js"></script>
+	<script egret="game" src="bin-debug/data/temple/TouZiTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/UnitTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/WeekChargeTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/WingsTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/WordTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/ZhuLingTemple.js"></script>
+	<script egret="game" src="bin-debug/enums/AssetsDefine.js"></script>
+	<script egret="game" src="bin-debug/enums/FightDefine.js"></script>
+	<script egret="game" src="bin-debug/fight/Buff/AdditionalSkillDamageBuff.js"></script>
+	<script egret="game" src="bin-debug/fight/Buff/BaseBattlePropertyBuff.js"></script>
+	<script egret="game" src="bin-debug/fight/Buff/BasePropertyBuff.js"></script>
+	<script egret="game" src="bin-debug/data/Enums.js"></script>
+	<script egret="game" src="bin-debug/fight/Buff/DamageTreatBuff.js"></script>
+	<script egret="game" src="bin-debug/fight/Buff/FaintBuff.js"></script>
+	<script egret="game" src="bin-debug/fight/Buff/IgnoreDefPercentBuff.js"></script>
+	<script egret="game" src="bin-debug/fight/Buff/ProtectBuff.js"></script>
+	<script egret="game" src="bin-debug/fight/Data/MovieClip.js"></script>
+	<script egret="game" src="bin-debug/AssetAdapter.js"></script>
+	<script egret="game" src="bin-debug/data/proto/MessageType.js"></script>
+	<script egret="game" src="bin-debug/fight/Entity/BlackboardComponent.js"></script>
+	<script egret="game" src="bin-debug/fight/Entity/CharacterControllerComponent.js"></script>
+	<script egret="game" src="bin-debug/data/proto/messType.js"></script>
+	<script egret="game" src="bin-debug/fight/Entity/Entity.js"></script>
+	<script egret="game" src="bin-debug/fight/Entity/FindPathComponent.js"></script>
+	<script egret="game" src="bin-debug/fight/Entity/MonsterAnimatorComponent.js"></script>
+	<script egret="game" src="bin-debug/fight/Entity/MonsterBattleComponent.js"></script>
+	<script egret="game" src="bin-debug/fight/Entity/RoleAnimatorComponent.js"></script>
+	<script egret="game" src="bin-debug/fight/Entity/RoleBattleComponent.js"></script>
+	<script egret="game" src="bin-debug/fight/FSM/AttackState.js"></script>
+	<script egret="game" src="bin-debug/fight/FSM/DeadState.js"></script>
+	<script egret="game" src="bin-debug/fight/FSM/FaintState.js"></script>
+	<script egret="game" src="bin-debug/fight/FSM/FSM.js"></script>
+	<script egret="game" src="bin-debug/fight/FSM/IdleState.js"></script>
+	<script egret="game" src="bin-debug/fight/FSM/MoveState.js"></script>
+	<script egret="game" src="bin-debug/controller/ViewController.js"></script>
+	<script egret="game" src="bin-debug/fight/Skill/CircleHitSkill.js"></script>
+	<script egret="game" src="bin-debug/fight/Skill/CircleSkill.js"></script>
+	<script egret="game" src="bin-debug/fight/Skill/HitSkill.js"></script>
+	<script egret="game" src="bin-debug/fight/Skill/LineSkill.js"></script>
+	<script egret="game" src="bin-debug/fight/Skill/SectorSkill.js"></script>
+	<script egret="game" src="bin-debug/fight/Skill/SingleSkill.js"></script>
+	<script egret="game" src="bin-debug/data/proto/Proto.js"></script>
+	<script egret="game" src="bin-debug/fight/Skill/SummonSkill.js"></script>
+	<script egret="game" src="bin-debug/LoadingUI.js"></script>
+	<script egret="game" src="bin-debug/Main.js"></script>
+	<script egret="game" src="bin-debug/manager/AssetsMgr.js"></script>
+	<script egret="game" src="bin-debug/manager/EntityMgr.js"></script>
+	<script egret="game" src="bin-debug/manager/ModuleEventDefine.js"></script>
+	<script egret="game" src="bin-debug/manager/ModuleEventMgr.js"></script>
+	<script egret="game" src="bin-debug/manager/ProtocolMgr.js"></script>
+	<script egret="game" src="bin-debug/manager/TempleManager.js"></script>
+	<script egret="game" src="bin-debug/manager/TempleMgr.js"></script>
+	<script egret="game" src="bin-debug/manager/TimerMgr.js"></script>
+	<script egret="game" src="bin-debug/manager/UIEventMgr.js"></script>
+	<script egret="game" src="bin-debug/module/MapModule.js"></script>
+	<script egret="game" src="bin-debug/module/SceneModule.js"></script>
+	<script egret="game" src="bin-debug/net/Processor.js"></script>
+	<script egret="game" src="bin-debug/net/SocketManager.js"></script>
+	<script egret="game" src="bin-debug/ThemeAdapter.js"></script>
+	<script egret="game" src="bin-debug/ui/map/ViewMap.js"></script>
+	<script egret="game" src="bin-debug/data/temple/AddBagTemple.js"></script>
+	<script egret="game" src="bin-debug/data/temple/BossTemple.js"></script>
+	<script egret="game" src="bin-debug/utils/PosUtils.js"></script>
+	<script egret="game" src="bin-debug/utils/Queue.js"></script>
+	<script egret="game" src="bin-debug/utils/Utility.js"></script>
+	<!--game_files_end-->
+</head>
+<body>
+
+    <div style="margin: auto;width: 100%;height: 100%;" class="egret-player"
+         data-entry-class="Main"
+         data-orientation="auto"
+         data-scale-mode="showAll"
+         data-frame-rate="30"
+         data-content-width="480"
+         data-content-height="800"
+         data-show-paint-rect="false"
+         data-multi-fingered="2"
+         data-show-fps="false" data-show-log="true"
+         data-show-fps-style="x:0,y:0,size:12,textColor:0xffffff,bgAlpha:0.9">
+    </div>
+    <script>
+        /**
+         * {
+         * "renderMode":, //引擎渲染模式，"canvas" 或者 "webgl"
+         * "audioType": "" //使用的音频类型，0:默认，1:qq audio，2:web audio，3:audio
+         * "antialias": //WebGL模式下是否开启抗锯齿，true:开启，false:关闭，默认为false
+         * }
+         **/
+        egret.runEgret({renderMode:"webgl", audioType:0});
+    </script>
+</body>
+</html>

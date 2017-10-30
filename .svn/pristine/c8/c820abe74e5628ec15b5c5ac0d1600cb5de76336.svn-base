@@ -1,0 +1,1 @@
+module data{	export interface GuildDutyTemple{		/**		* id		*/		id:number;		/**		* 职位说明		*/		information:string;		/**		* 职位等级		*/		level:number;		/**		* 是否可接受帮众		*/		ifAddperson:number;		/**		* 是否可开出帮众		*/		ifReduceperson:number;		/**		* 是否可任命职位		*/		ifAppoint:number;	}}

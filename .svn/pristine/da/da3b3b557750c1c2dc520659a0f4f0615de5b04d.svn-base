@@ -1,0 +1,113 @@
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+//战斗组件
+var BattleComponent = (function (_super) {
+    __extends(BattleComponent, _super);
+    function BattleComponent() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Object.defineProperty(BattleComponent.prototype, "type", {
+        //组件类型
+        get: function () { return ComponentType.Battle; },
+        enumerable: true,
+        configurable: true
+    });
+    //初始化组件
+    BattleComponent.prototype.init = function () {
+        this.buffList = new List();
+    };
+    //释放组件
+    BattleComponent.prototype.release = function () {
+        this.buffList.clear();
+        this.buffList = null;
+    };
+    //更新
+    BattleComponent.prototype.Update = function (deltaTime) {
+        this.currTime -= deltaTime;
+        if (!this.isStartFight || this.currTime > 0 || this.owner.currState != FSMState.Idle)
+            return;
+        var objRet = this.getNearestTarget();
+        if (!objRet["targetEntity"])
+            return;
+        if (objRet["distance"] <= this.atkDistance)
+            this.owner.trigger(RoleEventDefine.ChangeState, FSMState.Attack, objRet["targetEntity"], this.getCastSkill());
+        else
+            this.owner.trigger(RoleEventDefine.ChangeState, FSMState.Move, objRet["targetEntity"]);
+    };
+    //获取最近的目标
+    BattleComponent.prototype.getNearestTarget = function () {
+        var entityList = EntityMgr.Instance.getOtherCampEnityList(this.owner.camp);
+        if (!entityList || entityList.count == 0)
+            return null;
+        var selfComp = this.owner.getComponent(ComponentType.Blackboard);
+        var sx = selfComp.getAttrValue(data.RoleAttr.x);
+        var sy = selfComp.getAttrValue(data.RoleAttr.y);
+        var distance = ConstDefine.IntMaxValue;
+        var targetEntity = null;
+        entityList.forEach(function (entity) {
+            var targetComp = entity.getComponent(ComponentType.Blackboard);
+            if (targetComp.getAttrValue(data.RoleAttr.HP) <= 0)
+                return;
+            var tx = targetComp.getAttrValue(data.RoleAttr.x);
+            var ty = targetComp.getAttrValue(data.RoleAttr.y);
+            var targetDistance = Utility.distanceCell(sx, sy, tx, ty);
+            if (targetDistance < distance) {
+                targetEntity = entity;
+                distance = targetDistance;
+            }
+        });
+        return { distance: distance, targetEntity: targetEntity };
+    };
+    //添加Buff 添加时必须做深拷贝
+    BattleComponent.prototype.addBuff = function (buff) {
+        var objRet = { isAddSuccess: false, removeBuffList: new List() };
+        if (buff.buffTp.DeleteType == BuffDelType.NeverDestroy) {
+            this.buffList.add(BuffBase.createBuffByTp(buff.caster, buff.buffTp, buff.ownerSkillId).addBuff(this.owner));
+            objRet.isAddSuccess = true;
+            return objRet;
+        }
+        //如果buffer存在, 并且新buffer等级>=原有buffer等级，将进行替换
+        var findBuff = this.buffList.find(function (x) { return x.type == buff.type && x.buffTp.DeleteType != BuffDelType.NeverDestroy; });
+        if (!!findBuff) {
+            if (buff.buffTp.Lev >= findBuff.buffTp.Lev) {
+                this.removeBuff(findBuff);
+                objRet.removeBuffList.add(findBuff.buffTp.ID);
+                objRet.isAddSuccess = true;
+                this.buffList.add(BuffBase.createBuffByTp(buff.caster, buff.buffTp, buff.ownerSkillId).addBuff(this.owner));
+            }
+            return objRet;
+        }
+        //如果出现比添加Buffer更高优先级的，将不添加，0最大
+        findBuff = this.buffList.find(function (x) { return x.buffTp.BuffPriority < buff.buffTp.BuffPriority && x.buffTp.DeleteType != BuffDelType.NeverDestroy; });
+        if (!!findBuff)
+            return objRet;
+        //如果buff不存在，将判定buffer优先级，优先级大的替换小的, 移除准则等于所有或相应状态时，将被移除
+        this.buffList.removeAll(function (buffBase) {
+            if (buffBase.buffTp.DeleteType == BuffDelType.NeverDestroy)
+                return false;
+            if (buffBase.buffTp.BuffPriority > buff.buffTp.BuffPriority &&
+                (buffBase.buffTp.BufferState == buff.buffTp.RemoveRule || buff.buffTp.RemoveRule == BufferRemoveRule.All)) {
+                buffBase.removeBuff();
+                objRet.removeBuffList.add(buffBase.buffTp.ID);
+                return true;
+            }
+            return false;
+        }, this);
+        this.buffList.add(BuffBase.createBuffByTp(buff.caster, buff.buffTp, buff.ownerSkillId).addBuff(this.owner));
+        objRet.isAddSuccess = true;
+        return objRet;
+    };
+    //移除Buff
+    BattleComponent.prototype.removeBuff = function (buff) {
+        this.buffList.removeItem(buff.removeBuff());
+    };
+    return BattleComponent;
+}(ComponentBase));
+__reflect(BattleComponent.prototype, "BattleComponent");
+//# sourceMappingURL=BattleComponent.js.map

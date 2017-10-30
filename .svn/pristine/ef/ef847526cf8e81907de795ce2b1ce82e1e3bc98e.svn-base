@@ -1,0 +1,137 @@
+module SceneModule
+{
+    
+    //创建场景
+	export function createScene(mapId:number):void
+    {
+        var battleScene:BattleScene = new BattleScene();
+        battleScene.init(mapId);
+    }
+
+    
+    
+
+    //战斗场景
+    export class BattleScene
+    {
+        //固定帧更新时间 毫秒
+        public static readonly fixTime:number = 100;
+        protected static mapId:number;
+        public static get currMapId() { return this.mapId; }
+
+        //当前帧数和游戏时间
+        protected static tickCount:number;
+        public static get currTickCount() { return this.tickCount; }
+        public static get currTime() { return this.tickCount * BattleScene.fixTime; }
+
+        //目标停留的格子
+        protected roleStayDic:Dictionary<number, MapModule.MapCell>;
+        private roleGrid:egret.Point;
+        public constructor()
+        {
+            this.roleStayDic = new Dictionary<number, MapModule.MapCell>();
+            
+        }
+
+        //初始化场景
+        public init(mapId:number, monsterIdList?:List<number>):void
+        {
+            BattleScene.mapId = mapId;
+            ModuleEventMgr.instance.addModuleEventListener(ModuleEvent.RoleMove, this.roleMove, this);
+            ModuleEventMgr.instance.addModuleEventListener(ModuleEvent.CreateEntity, this.createEntity);
+            this.roleGrid = new egret.Point(0,0);
+            ViewMap.instance.init(mapId,this.roleGrid);
+
+            BattleScene.mapId = mapId;
+            //loadMap(mapId);
+
+
+            // var entity = Entity.createRoleEntity(roleInfo, "player", "111111", "vvvvv");
+            // var roleEntityInfo = new proto.RoleEntityInfo().init(entity.job, entity.instanceId, 0, roleInfo.roleAttr, null);
+            // ModuleEventMgr.instance.triger(new CreateEntityEvent(entity, new egret.Point(20, 20), roleEntityInfo));
+            //测试
+            // eui.Binding.bindHandler(this.roleGrid,["x"],(x:number)=>{
+            //     if(!isNaN(x)){
+            //         this.mapMove(this.roleGrid);
+            //     }
+            // },this)
+            // eui.Binding.bindHandler(this.roleGrid,["y"],(y:number)=>{
+            //     if(!isNaN(y)){
+            //         this.mapMove(this.roleGrid);
+            //     }
+            // },this);
+            // this.initialized = true;
+           
+            
+            //this.entityMgr.addEntity(RoleInstance.create());
+
+            //viewMapBg.instance.init();
+
+            this.createMonster(monsterIdList);
+        }
+        
+        public release():void
+        {
+            ModuleEventMgr.instance.removeModuleEventListener(ModuleEvent.RoleMove, this.roleMove, this);
+            ModuleEventMgr.instance.removeModuleEventListener(ModuleEvent.CreateEntity, this.createEntity);
+
+            this.roleStayDic.foreach(cell => cell.isOpen = true);
+            this.roleStayDic.clear();
+
+            EntityMgr.Instance.clear();
+        }
+
+        //创建怪物
+        public createMonster(monsterIdList:List<number>):void
+        {
+            if (!monsterIdList || monsterIdList.count == 0)
+                return;
+            
+            monsterIdList.forEach(id =>
+            {
+                let entity = Entity.createMonsterEntity(id);
+                ModuleEventMgr.instance.triger(new CreateEntityEvent(entity, new egret.Point(10, 10)));
+            });
+        }
+        
+        
+        //角色移动
+        private roleMove(roleMove:RoleMoveEvent):void
+        {
+            var fromCell = MapModule.getMapCellByPoint(roleMove.ptFrom, BattleScene.mapId);
+            var toCell = MapModule.getMapCellByPoint(roleMove.ptTo, BattleScene.mapId);
+
+            if (!!fromCell)
+            {
+                fromCell.isOpen = true;
+                this.roleStayDic.remove(fromCell.Index);
+            }
+
+            if (!!toCell)
+            {
+                toCell.isOpen = false;
+                this.roleGrid.x = toCell.Y;
+                this.roleGrid.y = toCell.X;
+                ViewMap.instance.mapMove(this.roleGrid);
+                this.roleStayDic.add(toCell.Index, toCell);
+            }
+        }
+
+        //创建实体
+        private createEntity(createEntity:CreateEntityEvent):void
+        {
+            Entity.createMonsterEntity
+            var entity = createEntity.who;
+            var blackboardComp = entity.getComponent<BlackboardComponent>(ComponentType.Blackboard);
+
+            blackboardComp.setAttrValue(data.RoleAttr.x, createEntity.pos.x);
+            blackboardComp.setAttrValue(data.RoleAttr.y, createEntity.pos.y);
+
+            blackboardComp.setAttrValue(data.RoleAttr.HP, blackboardComp.getAttrValue(data.RoleAttr.MHP));
+            blackboardComp.setAttrValue(data.RoleAttr.MP, blackboardComp.getAttrValue(data.RoleAttr.MMP));
+            
+            EntityMgr.Instance.addEntity(entity);
+        }
+       
+    }
+}

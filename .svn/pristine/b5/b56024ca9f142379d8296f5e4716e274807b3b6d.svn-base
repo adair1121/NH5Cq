@@ -1,0 +1,1 @@
+module data{	export interface ChargeTemple{		/**		* id		*/		id:number;		/**		* 充值类型		*/		type:number;		/**		* 充值说明		*/		information:string;		/**		* 充值金额		*/		money:number;		/**		* 获得元宝		*/		yuanbao:number;	}}

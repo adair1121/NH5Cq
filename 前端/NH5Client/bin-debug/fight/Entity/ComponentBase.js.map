@@ -1,0 +1,1 @@
+{"version":3,"file":"ComponentBase.js","sourceRoot":"","sources":["../../../src/fight/Entity/ComponentBase.ts"],"names":[],"mappings":";;;AAAA;IAQC,uBAAmB,KAAY;QAE9B,IAAI,CAAC,KAAK,GAAG,KAAK,CAAC;IACpB,CAAC;IAED,OAAO;IACA,4BAAI,GAAX,cAAoB,CAAC;IAErB,MAAM;IACC,+BAAO,GAAd,cAAuB,CAAC;IACzB,oBAAC;AAAD,CAAC,AAlBD,IAkBC;AAlBc,UAAA,aAAa,4BAkB3B,CAAA"}

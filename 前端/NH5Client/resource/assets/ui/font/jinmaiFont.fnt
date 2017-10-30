@@ -1,0 +1,12 @@
+{"file":"jinmaiFont.png","frames":{
+"s":{"x":93,"y":0,"w":30,"h":21,"offX":0,"offY":1,"sourceW":31,"sourceH":22},
+"1":{"x":60,"y":46,"w":29,"h":9,"offX":1,"offY":7,"sourceW":31,"sourceH":22},
+"2":{"x":91,"y":43,"w":29,"h":17,"offX":1,"offY":3,"sourceW":31,"sourceH":22},
+"3":{"x":91,"y":23,"w":30,"h":18,"offX":0,"offY":2,"sourceW":31,"sourceH":22},
+"4":{"x":0,"y":30,"w":26,"h":19,"offX":3,"offY":2,"sourceW":31,"sourceH":22},
+"5":{"x":28,"y":24,"w":30,"h":20,"offX":0,"offY":1,"sourceW":31,"sourceH":22},
+"6":{"x":60,"y":23,"w":29,"h":21,"offX":1,"offY":1,"sourceW":31,"sourceH":22},
+"7":{"x":60,"y":0,"w":31,"h":21,"offX":0,"offY":0,"sourceW":31,"sourceH":22},
+"8":{"x":28,"y":46,"w":30,"h":16,"offX":0,"offY":4,"sourceW":31,"sourceH":22},
+"9":{"x":28,"y":0,"w":30,"h":22,"offX":0,"offY":0,"sourceW":31,"sourceH":22},
+"c":{"x":0,"y":0,"w":26,"h":28,"offX":2,"offY":2,"sourceW":30,"sourceH":32}}}

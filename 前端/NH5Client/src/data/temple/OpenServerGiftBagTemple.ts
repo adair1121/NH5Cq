@@ -1,0 +1,1 @@
+module data{	export interface OpenServerGiftBagTemple{		/**		* id		*/		id:number;		/**		* 礼包名称		*/		name:string;		/**		* 礼包说明		*/		information:string;		/**		* 礼包价格		*/		price:number;		/**		* 礼包道具ID		*/		itemID:number;		/**		* 道具显示		*/		show:number[];		/**		* 道具数量		*/		showNumber:number[];		/**		* 掉落		*/		dropId:number;	}}

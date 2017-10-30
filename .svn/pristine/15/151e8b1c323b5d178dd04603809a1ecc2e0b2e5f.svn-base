@@ -1,0 +1,87 @@
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+//抗拒火环
+var CircleHitSkill = (function (_super) {
+    __extends(CircleHitSkill, _super);
+    function CircleHitSkill() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    //获取技能目标列表
+    CircleHitSkill.prototype.getSkillTargetList = function (target, sx, sy, tx, ty) {
+        return this.getTargetList(Utility.getCircleRangeByRadius(sx, sy, this.skillTp.range));
+    };
+    //释放技能
+    CircleHitSkill.prototype.castSkill = function (target) {
+        var _this = this;
+        if (this.isCastSkill)
+            return;
+        var selfComp = this.owner.getComponent(ComponentType.Blackboard);
+        var targetComp = target.getComponent(ComponentType.Blackboard);
+        this.skillConsume(selfComp);
+        var damageInfoList = this.useSkill(selfComp, targetComp);
+        if (!damageInfoList || damageInfoList.count == 0)
+            return;
+        var sx = selfComp.getAttrValue(data.RoleAttr.x);
+        var sy = selfComp.getAttrValue(data.RoleAttr.y);
+        var effectArgList = this.skillEffectArgumentsDic.getValue(SkillEffect.HitMove);
+        if (!effectArgList || effectArgList.count == 0) {
+            console.error("HitSkill castSkill effectArgList.count == 0");
+            return;
+        }
+        damageInfoList.forEach(function (damageInfo) {
+            var targetBlackboard = damageInfo.who.getComponent(ComponentType.Blackboard);
+            var tx = targetBlackboard.getAttrValue(data.RoleAttr.x);
+            var ty = targetBlackboard.getAttrValue(data.RoleAttr.y);
+            var targetPt = _this.getHitMovePt(sx, sy, tx, ty, effectArgList[0]);
+            damageInfo.hitPt.x = targetPt.x;
+            damageInfo.hitPt.y = targetPt.y;
+            ModuleEventMgr.instance.triger(new RoleMoveEvent(_this.owner, new egret.Point(tx, ty), targetPt));
+        });
+        return damageInfoList;
+    };
+    //返回撞击目标点
+    CircleHitSkill.prototype.getHitMovePt = function (sx, sy, tx, ty, distance) {
+        var vecX = tx - sx;
+        var vecY = ty - sy;
+        var distanceX = vecX < 0 ? -vecX : vecX;
+        var distanceY = vecY < 0 ? -vecY : vecY;
+        var targetPt = new egret.Point(sx, sy);
+        //在斜线方向 以当前方向击退X格
+        if (distanceX == distanceY) {
+            for (var i = 1; i <= distance; i++) {
+                var x = tx + (vecX < 0 ? -i : i);
+                var y = ty + (vecY < 0 ? -i : i);
+                if (MapModule.isBlock(x, y))
+                    break;
+                targetPt.x = x;
+                targetPt.y = y;
+            }
+        }
+        else if (distanceY == 0) {
+            for (var i = 1; i <= distance; i++) {
+                var x = tx + (vecX < 0 ? -i : i);
+                if (MapModule.isBlock(x, sy))
+                    break;
+                targetPt.x = x;
+            }
+        }
+        else {
+            for (var i = 1; i <= distance; i++) {
+                var y = ty + (vecY < 0 ? -i : i);
+                if (MapModule.isBlock(sx, y))
+                    break;
+                targetPt.y = y;
+            }
+        }
+        return targetPt;
+    };
+    return CircleHitSkill;
+}(SkillBase));
+__reflect(CircleHitSkill.prototype, "CircleHitSkill");
+//# sourceMappingURL=CircleHitSkill.js.map

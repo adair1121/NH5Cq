@@ -1,0 +1,1 @@
+module data{	export interface FirstChargeTemple{		/**		* Id		*/		id:number;		/**		* 首冲说明		*/		information:string;		/**		* 充值金额		*/		money:number;		/**		* 是否账号首冲		*/		ifFirst:number;		/**		* 显示道具		*/		showItem:number[];		/**		* 显示道具数量		*/		showNumber:number[];		/**		* 开服天数		*/		beginDays:number;		/**		* 获得掉落ID		*/		dropID:number;	}}

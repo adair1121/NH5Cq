@@ -1,0 +1,38 @@
+//攻击状态
+class AttackState extends StateBase
+{
+	//正在播放的技能模版
+	protected skill:SkillBase;
+
+	//状态
+	public get state():FSMState { return FSMState.Attack; }
+
+	//进入状态 [0]:目标 [1]:释放哪个技能
+	public OnEnter(args:any[]):void
+	{
+		if (!args || args.length < 2)
+		{
+			console.error("MoveState OnEnter args.length < 2");
+			return;
+		}
+
+		var target = args[0] as Entity;
+		this.skill = args[1] as SkillBase;
+
+		this.skill.OnEnter(target);
+	}
+
+	//执行状态
+	public OnExcuter(deltaTime:number):void
+	{
+		if (!!this.skill)
+			this.skill.OnExcuter(deltaTime);
+	}
+
+	//离开状态
+	public OnLeave():void
+	{
+		if (!!this.skill)
+			this.skill.OnLeave();
+	}
+}

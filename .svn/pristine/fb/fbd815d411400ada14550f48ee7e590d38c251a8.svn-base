@@ -1,0 +1,149 @@
+//野蛮冲撞技能
+class HitSkill extends SkillBase
+{
+    //获取技能目标列表
+	protected getSkillTargetList(target:BlackboardComponent, sx:number, sy:number, tx:number, ty:number):List<BlackboardComponent>
+    {
+        return new List<BlackboardComponent>(new Array<BlackboardComponent>(target));
+    }
+
+    //是否能使用技能 只有在水平、垂直、斜线方向
+	public canUseSkill(tx:number, ty:number):boolean
+    {
+        var blackboardComp = this.owner.getComponent<BlackboardComponent>(ComponentType.Blackboard);
+        var sx = blackboardComp.getAttrValue(data.RoleAttr.x);
+        var sy = blackboardComp.getAttrValue(data.RoleAttr.y);
+
+        if (sx == tx && sy == ty)
+            return false;
+
+        var vecX = tx - sx;
+        var vecY = ty - sy;
+
+        var distanceX = vecX < 0 ? -vecX : vecX;
+        var distanceY = vecY < 0 ? -vecY : vecY;
+
+        if (distanceX == distanceY || distanceX == 0 || distanceY == 0)
+        {
+            var pathList = MapModule.findPath(sx, sy, tx, ty, 1);
+            if (!pathList || pathList.count == 0)
+                return false;
+
+            //检查冲撞路径内是否有阻挡
+            var isBlock = false;
+            pathList.forEach(mapCell => { if (!mapCell.isOpen) isBlock = true; });
+
+            if (isBlock)
+                return false;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    //释放技能
+	public castSkill(target:Entity):List<DamageInfoEvent>
+    {
+        if (this.isCastSkill)
+            return;
+
+        var selfComp = this.owner.getComponent<BlackboardComponent>(ComponentType.Blackboard);       
+        var targetComp = target.getComponent<BlackboardComponent>(ComponentType.Blackboard);
+
+        this.skillConsume(selfComp);
+
+        var damageInfoList = this.useSkill(selfComp, targetComp);
+        if (!damageInfoList || damageInfoList.count == 0)
+            return;
+
+        var sx = selfComp.getAttrValue(data.RoleAttr.x);
+        var sy = selfComp.getAttrValue(data.RoleAttr.y);
+
+        var tx = targetComp.getAttrValue(data.RoleAttr.x);
+        var ty = targetComp.getAttrValue(data.RoleAttr.y);
+
+        var pathList = MapModule.findPath(sx, sy, tx, ty, 1);
+        if (!!pathList || pathList.count == 0)
+            return;
+
+        var effectArgList = this.skillEffectArgumentsDic.getValue(SkillEffect.HitMove);
+        if (!effectArgList || effectArgList.count == 0)
+        {
+            console.error("HitSkill castSkill effectArgList.count == 0");
+            return;
+        }
+
+        //先冲撞到目标面前
+        var cell = pathList.deQueueLast();
+
+        //冲撞距离和攻击距离相同，将只播放特效无位移
+        var targetPt = this.getHitMovePt(cell.X, cell.Y, tx, ty, effectArgList[0] - pathList.count);
+        
+        selfComp.setAttrValue(data.RoleAttr.x, targetPt.x);
+        selfComp.setAttrValue(data.RoleAttr.y, targetPt.y);
+
+        damageInfoList.forEach(damageInfo => { damageInfo.hitPt.x = targetPt.x; damageInfo.hitPt.y = targetPt.y; });
+
+        this.owner.trigger(RoleEventDefine.ChangeState, FSMState.Hit, target, cell.toPoint(), )
+        ModuleEventMgr.instance.triger(new RoleMoveEvent(this.owner, new egret.Point(sx, sy), targetPt));
+
+        return damageInfoList;
+    }
+
+    //返回撞击目标点
+    private getHitMovePt(sx:number, sy:number, tx:number, ty:number, distance:number):egret.Point
+    {
+        var vecX = tx - sx;
+        var vecY = ty - sy;
+
+        var distanceX = vecX < 0 ? -vecX : vecX;
+        var distanceY = vecY < 0 ? -vecY : vecY;
+
+        var targetPt = new egret.Point(sx, sy);
+
+        //在斜线方向 以当前方向击退X格
+        if (distanceX == distanceY)
+        {
+            for(let i = 1; i <= distance; i++)
+            {
+                let x = tx + (vecX < 0 ? -i : i);
+                let y = ty + (vecY < 0 ? -i : i);
+
+                if (MapModule.isBlock(x, y))
+                    break;
+
+                targetPt.x = x;
+                targetPt.y = y;
+            }
+        }
+        //由于斜线算1，所以有可能x的距离是2，y距离是1的情况，这时将以X方向击退
+        else if (distanceY == 0)
+        {
+            for(let i = 1; i <= distance; i++)
+            {
+                let x = tx + (vecX < 0 ? -i : i);
+
+                if (MapModule.isBlock(x, sy))
+                    break;
+
+                targetPt.x = x;
+            }
+        }
+        //将以Y方向击退
+        else
+        {
+            for(let i = 1; i <= distance; i++)
+            {
+                let y = ty + (vecY < 0 ? -i : i);
+
+                if (MapModule.isBlock(sx, y))
+                    break;
+
+                targetPt.y = y;
+            }
+        }
+
+        return targetPt;
+    }
+}

@@ -1,0 +1,52 @@
+//攻击状态
+class AttackState extends StateBase
+{
+	//正在播放的技能模版
+	protected skill:SkillBase;
+
+	//技能周期
+	protected skillPeriod:number;
+
+	//是否释放完技能
+	protected isCastSkill:boolean;
+
+	//状态
+	public get state():FSMState { return FSMState.Attack; }
+
+	//进入状态 [0]:目标 [1]:释放哪个技能
+	public OnEnter(args:any[]):void
+	{
+		if (!args || args.length < 2)
+		{
+			console.error("MoveState OnEnter args.length < 2");
+			return;
+		}
+
+		var target = args[0] as Entity;
+		this.skill = args[1] as SkillBase;
+
+		this.skillPeriod = this.skill.skillTp.skillPeriod;
+		this.isCastSkill = false;
+
+		this.skill.OnEnter(target);
+	}
+
+	//执行状态
+	public OnExcuter(deltaTime:number):void
+	{
+		this.skillPeriod -= deltaTime;
+
+		if (!!this.skill && !this.isCastSkill)
+			this.isCastSkill = this.skill.OnExcuter(deltaTime);
+
+		if (this.skillPeriod <= 0 && this.isCastSkill)
+			this.owner.trigger(RoleEventDefine.ChangeState, FSMState.Idle);
+	}
+
+	//离开状态
+	public OnLeave():void
+	{
+		if (!!this.skill)
+			this.skill.OnLeave();
+	}
+}

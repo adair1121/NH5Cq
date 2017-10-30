@@ -1,0 +1,1 @@
+module data{	export interface DropItemTemple{		/**		* 编号		*/		ID:number;		/**		* 掉落组ID		*/		dropTeamID:number;		/**		* 物品ID		*/		ItemID:number;		/**		* 掉落物品数量		*/		itemNumber:number;		/**		* 掉落组描述		*/		information:string;	}}

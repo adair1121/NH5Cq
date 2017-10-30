@@ -1,0 +1,1 @@
+module data{	export interface WeekChargeTemple{		/**		* id		*/		id:number;		/**		* 说明		*/		information:string;		/**		* 累计充值金额		*/		money:number;		/**		* 奖励物品ID		*/		awardItem:number[];		/**		* 奖励数量		*/		awardNumber:number[];		/**		* 掉落		*/		dropID:number;	}}

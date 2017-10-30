@@ -1,0 +1,52 @@
+class FSM
+{
+	//当前状态
+	private currState:StateBase;
+
+	//上一个状态
+	private preState:StateBase;
+
+	//归属于哪个实体
+	private owner:Entity;
+
+	//所有状态
+	private readonly stateDic:Dictionary<FSMState, StateBase> = new Dictionary<FSMState, StateBase>();
+
+	public constructor(owner:Entity)
+	{
+		this.stateDic.add(FSMState.Idle, new IdleState(owner));
+		this.stateDic.add(FSMState.Move, new MoveState(owner));
+		this.stateDic.add(FSMState.Attack, new AttackState(owner));
+		this.stateDic.add(FSMState.Dead, new DeadState(owner));
+		this.stateDic.add(FSMState.Faint, new FaintState(owner));
+		this.stateDic.add(FSMState.Hit, new HitState(owner));
+
+		this.owner = owner;
+		this.currState = this.stateDic.getValue(FSMState.Idle);
+	}
+
+	//更新状态机
+	public Update(deltaTime:number):void
+	{
+		if (!!this.currState)
+			this.currState.OnExcuter(deltaTime);
+	}
+
+	//切换状态
+	public switchTo(state:FSMState, args?:any[]):StateBase
+	{
+		var changeState:StateBase = this.stateDic.getValue(state);
+		if (!!changeState)
+		{
+			this.preState = this.currState;
+			this.currState.OnLeave();
+			this.currState = changeState;
+			this.currState.OnEnter(args);
+
+			return this.currState;
+		}
+
+		console.log("FSM switch state " + state.toString() + " do not existed!");
+		return null;
+	}
+}

@@ -1,0 +1,70 @@
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+//移动状态
+var MoveState = (function (_super) {
+    __extends(MoveState, _super);
+    function MoveState() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Object.defineProperty(MoveState.prototype, "state", {
+        //状态
+        get: function () { return FSMState.Move; },
+        enumerable: true,
+        configurable: true
+    });
+    //进入状态 [0]:移动位置 [1]:移动时间 [2]:以什么状态移动 [3]:回调函数 [4]:this
+    MoveState.prototype.OnEnter = function (args) {
+        this.toPostion = args[0];
+        var totalMoveTime = args[1];
+        this.playState = args[2] || this.state;
+        this.callFunc = args[3] || null;
+        if (!!this.callFunc)
+            this.callFunc.bind(args[4]);
+        var selfComp = this.owner.getComponent(ComponentType.Blackboard);
+        var selfPos = selfComp.getPosition();
+        var cellCount = Utility.distanceCellByPt(selfPos, this.toPostion);
+        this.moveTimePerCell = totalMoveTime / cellCount;
+        this.currMoveTime = this.moveTimePerCell;
+        var targetPos = this.toPostion;
+        if (cellCount > 1) {
+            var findPathComp = this.owner.getComponent(ComponentType.FindPath);
+            targetPos = findPathComp.getNextMoveCell(this.toPostion, selfPos, 0);
+        }
+        this.owner.trigger(RoleEventDefine.PlayAnimation, this.playState, Utility.lookAt(selfPos.x, selfPos.y, targetPos.x, targetPos.y));
+        ModuleEventMgr.instance.triger(new RoleMoveEvent(this.owner, selfPos, targetPos, this.moveTimePerCell));
+    };
+    //执行状态
+    MoveState.prototype.OnExcuter = function (deltaTime) {
+        this.currMoveTime -= deltaTime;
+        if (this.currMoveTime <= 0) {
+            var selfComp = this.owner.getComponent(ComponentType.Blackboard);
+            var selfPos = selfComp.getPosition();
+            //没有到目标位置
+            if (selfPos.x != this.toPostion.x && selfPos.y != this.toPostion.y) {
+                var findComp = this.owner.getComponent(ComponentType.FindPath);
+                var targetPos = findComp.getNextMoveCell(this.toPostion, selfPos, 0);
+                ModuleEventMgr.instance.triger(new RoleMoveEvent(this.owner, selfPos, targetPos, this.moveTimePerCell));
+                this.currMoveTime = this.moveTimePerCell;
+                this.owner.trigger(RoleEventDefine.PlayAnimation, this.playState, Utility.lookAt(selfPos.x, selfPos.y, targetPos.x, targetPos.y));
+                return;
+            }
+            //移动到目标位置了
+            if (!!this.callFunc) {
+                this.callFunc();
+                return;
+            }
+            this.owner.trigger(RoleEventDefine.ChangeState, FSMState.Idle);
+        }
+    };
+    //离开状态
+    MoveState.prototype.OnLeave = function () { };
+    return MoveState;
+}(StateBase));
+__reflect(MoveState.prototype, "MoveState");
+//# sourceMappingURL=MoveState.js.map

@@ -1,0 +1,45 @@
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+//攻击状态
+var AttackState = (function (_super) {
+    __extends(AttackState, _super);
+    function AttackState() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Object.defineProperty(AttackState.prototype, "state", {
+        //状态
+        get: function () { return FSMState.Attack; },
+        enumerable: true,
+        configurable: true
+    });
+    //进入状态 [0]:目标 [1]:释放哪个技能
+    AttackState.prototype.OnEnter = function (args) {
+        if (!args || args.length < 2) {
+            console.error("MoveState OnEnter args.length == 0");
+            return;
+        }
+        var target = args[0];
+        var skill = args[1];
+        var selfComp = this.owner.getComponent(ComponentType.Blackboard);
+        var selfPos = selfComp.getPosition();
+        var targetComp = target.getComponent(ComponentType.Blackboard);
+        var targetPos = targetComp.getPosition();
+        var damageInfoList = skill.castSkill(target);
+        if (!!damageInfoList && damageInfoList.count > 0) {
+            this.owner.trigger(RoleEventDefine.PlayAtkAnimation, this.state, skill.skillTp, Utility.lookAt(selfPos.x, selfPos.y, targetPos.x, targetPos.y), damageInfoList);
+        }
+    };
+    //执行状态
+    AttackState.prototype.OnExcuter = function () { };
+    //离开状态
+    AttackState.prototype.OnLeave = function () { };
+    return AttackState;
+}(StateBase));
+__reflect(AttackState.prototype, "AttackState");
+//# sourceMappingURL=AttackState.js.map

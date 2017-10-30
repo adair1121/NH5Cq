@@ -1,0 +1,151 @@
+class ViewController {
+
+	public static readonly instance:ViewController = new ViewController();
+	private layer_map:egret.DisplayObjectContainer; 
+	private layer_unit:egret.DisplayObjectContainer;
+	private layer_ui:egret.DisplayObjectContainer; 
+	private layer_popup:egret.DisplayObjectContainer; 
+	private m_stage:egret.Stage;
+	private readonly viewGroupDic:Dictionary<string,Queue<egret.DisplayObject>>;
+	private readonly displayQueue:Queue<egret.DisplayObject>;
+	public constructor() {
+		this.viewGroupDic = new Dictionary<string,Queue<egret.DisplayObject>>();
+		this.displayQueue = new Queue<egret.DisplayObject>();
+	}
+	/**
+	 * 添加UI界面
+	 * @param:{view} 界面实例
+	 * @param:{xx}   界面x坐标
+	 * @param:{yy}   界面y坐标
+	 * @param:{group} 界面组
+	 */
+	public addUIView(view:egret.DisplayObject,xx?:number,yy?:number,group?:string):void{
+		this.judgeStage()
+		this.addView(this.layer_ui,view,xx,yy,group);
+	}
+	/**
+	 * 添加地图界面
+	 * @param:{view} 界面实例
+	 * @param:{xx}   界面x坐标
+	 * @param:{yy}   界面y坐标
+	 * @param:{group} 界面组
+	 */
+	public addMapView(view:egret.DisplayObject,xx?:number,yy?:number,group?:string):void{
+		this.judgeStage()
+		this.addView(this.layer_map,view,xx,yy,group);
+	}
+	/**
+	 * 添加到单位层
+	 */
+	public addUnitView(view:egret.DisplayObject,xx?:number,yy?:number,group?:string):void{
+		this.judgeStage()
+		this.addView(this.layer_unit,view,xx,yy,group);
+	}
+	/**
+	 * 添加popUp
+	 * @param:{view} 界面实例
+	 * @param:{xx}   界面x坐标
+	 * @param:{yy}   界面y坐标
+	 * @param:{group} 界面组
+	 */
+	public addPopUpView(view:egret.DisplayObject,xx?:number,yy?:number,group?:string):void{
+		this.judgeStage()
+		this.addView(this.layer_popup,view,xx,yy,group)
+	}
+	private judgeStage():void{
+		if(!this.m_stage){
+			this.m_stage = egret.MainContext.instance.stage;
+			this.layer_map=new egret.DisplayObjectContainer();
+			this.m_stage.addChild(this.layer_map);
+			this.layer_ui=new egret.DisplayObjectContainer();
+			this.m_stage.addChild(this.layer_ui);
+			this.layer_popup=new egret.DisplayObjectContainer();
+			this.m_stage.addChild(this.layer_popup);
+		}
+	}
+	private addView(layer:egret.DisplayObjectContainer,view:egret.DisplayObject,xx?:number,yy?:number,group?:string):void{
+		var groupQueue:Queue<egret.DisplayObject> = this.viewGroupDic.getValue(group || "default");
+		if(groupQueue && groupQueue.contains(view)){
+			//如果当前组包含界面实例---说明存在组中未存在显示列表中 需要添加到显示列表;
+			if(!this.isInDisplayList(view)){
+				view.visible = true;
+				this.addToDisplayList(view);
+			}
+		}else{
+			//当前界面组未包含界面实例
+			layer.addChild(view);
+			view.x = xx || 0;
+			view.y = yy || 0;
+			this.addViewToGroup(group,view);
+		}
+	}
+	/**
+	 * 移除相关界面
+	 * @param:{view} 界面实例
+	 * @param：{ifClearCache} 是否清除缓存
+	 * @param:{group} 界面组
+	 */
+	public removeView(view:egret.DisplayObject,ifClearCache:boolean = true,group:string = "default"):void{
+		var groupQueue:Queue<egret.DisplayObject> = this.viewGroupDic.getValue(group);
+		if(!!groupQueue && groupQueue.contains(view)){
+			if(ifClearCache){
+				groupQueue.removeItem(view);
+				view.parent.removeChild(view);
+			}else{
+				view.visible = false;
+			}
+			this.delFromDisplayList(view);
+		}
+	}
+	/**
+	 * 获取当前界面组中元素
+	 */
+	public getViewGroup(groupKey:string):Queue<egret.DisplayObject>{
+		return this.viewGroupDic.getValue(groupKey);
+	}
+	/**
+	 * 获取当前显示列表元素
+	 */
+	public getDisplayList():Queue<egret.DisplayObject>{
+		return this.displayQueue;
+	}
+	/**
+	 * 查看当前元素是否存在于显示列表
+	 * @param:{view} 界面实例
+	 */
+	public isInDisplayList(view:egret.DisplayObject):boolean{
+		return this.displayQueue.contains(view);
+	}
+	/**
+	 * 获取当前显示列表长度
+	 */
+	public get displayListCount():number{
+		return this.displayQueue.count;
+	}
+	/**
+	 * 从显示列表删除元素
+	 */
+	private delFromDisplayList(view:egret.DisplayObject):void{
+		if(this.isInDisplayList(view)){
+			this.displayQueue.removeItem(view);
+		}
+	}
+	private addToDisplayList(view:egret.DisplayObject):void{
+		this.displayQueue.removeItem(view);
+		this.displayQueue.enQueueStart(view);
+	}
+	/**
+	 * 添加显示对象到对应组
+	 */
+	private addViewToGroup(groupKey:string,element:egret.DisplayObject):void{
+		var groupQueue:Queue<egret.DisplayObject> = this.viewGroupDic.getValue(groupKey);
+		this.addToDisplayList(element);
+		if(!!groupQueue){
+			groupQueue.enQueue(element);
+			return;
+		}
+		var queue:Queue<egret.DisplayObject> = new Queue<egret.DisplayObject>();
+		queue.enQueue(element);
+		this.viewGroupDic.add(groupKey,queue);
+	}
+}

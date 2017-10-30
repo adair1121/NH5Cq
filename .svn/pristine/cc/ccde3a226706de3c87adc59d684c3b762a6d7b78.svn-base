@@ -1,0 +1,150 @@
+var __reflect = (this && this.__reflect) || function (p, c, t) {
+    p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
+};
+var ViewController = (function () {
+    function ViewController() {
+        this.viewGroupDic = new Dictionary();
+        this.displayQueue = new Queue();
+    }
+    /**
+     * 添加UI界面
+     * @param:{view} 界面实例
+     * @param:{xx}   界面x坐标
+     * @param:{yy}   界面y坐标
+     * @param:{group} 界面组
+     */
+    ViewController.prototype.addUIView = function (view, xx, yy, group) {
+        this.judgeStage();
+        this.addView(this.layer_ui, view, xx, yy, group);
+    };
+    /**
+     * 添加地图界面
+     * @param:{view} 界面实例
+     * @param:{xx}   界面x坐标
+     * @param:{yy}   界面y坐标
+     * @param:{group} 界面组
+     */
+    ViewController.prototype.addMapView = function (view, xx, yy, group) {
+        this.judgeStage();
+        this.addView(this.layer_map, view, xx, yy, group);
+    };
+    /**
+     * 添加popUp
+     * @param:{view} 界面实例
+     * @param:{xx}   界面x坐标
+     * @param:{yy}   界面y坐标
+     * @param:{group} 界面组
+     */
+    ViewController.prototype.addPopUpView = function (view, xx, yy, group) {
+        this.judgeStage();
+        this.addView(this.layer_popup, view, xx, yy, group);
+    };
+    ViewController.prototype.judgeStage = function () {
+        if (!this.m_stage) {
+            this.m_stage = egret.MainContext.instance.stage;
+            this.layer_map = new egret.DisplayObjectContainer();
+            this.m_stage.addChild(this.layer_map);
+            this.layer_ui = new egret.DisplayObjectContainer();
+            this.m_stage.addChild(this.layer_ui);
+            this.layer_popup = new egret.DisplayObjectContainer();
+            this.m_stage.addChild(this.layer_popup);
+        }
+    };
+    ViewController.prototype.addView = function (layer, view, xx, yy, group) {
+        var groupQueue = this.viewGroupDic.getValue(group || "default");
+        if (groupQueue && groupQueue.contains(view)) {
+            //如果当前组包含界面实例---说明存在组中未存在显示列表中 需要添加到显示列表;
+            if (!this.isInDisplayList(view)) {
+                view.visible = true;
+                this.addToDisplayList(view);
+            }
+        }
+        else {
+            //当前界面组未包含界面实例
+            layer.addChild(view);
+            view.x = xx || 0;
+            view.y = yy || 0;
+            this.addViewToGroup(group, view);
+        }
+    };
+    /**
+     * 移除相关界面
+     * @param:{view} 界面实例
+     * @param：{ifClearCache} 是否清除缓存
+     * @param:{group} 界面组
+     */
+    ViewController.prototype.removeView = function (view, ifClearCache, group) {
+        if (ifClearCache === void 0) { ifClearCache = true; }
+        if (group === void 0) { group = "default"; }
+        var groupQueue = this.viewGroupDic.getValue(group);
+        if (!!groupQueue && groupQueue.contains(view)) {
+            if (ifClearCache) {
+                groupQueue.removeItem(view);
+                view.parent.removeChild(view);
+            }
+            else {
+                view.visible = false;
+            }
+            this.delFromDisplayList(view);
+        }
+    };
+    /**
+     * 获取当前界面组中元素
+     */
+    ViewController.prototype.getViewGroup = function (groupKey) {
+        return this.viewGroupDic.getValue(groupKey);
+    };
+    /**
+     * 获取当前显示列表元素
+     */
+    ViewController.prototype.getDisplayList = function () {
+        return this.displayQueue;
+    };
+    /**
+     * 查看当前元素是否存在于显示列表
+     * @param:{view} 界面实例
+     */
+    ViewController.prototype.isInDisplayList = function (view) {
+        return this.displayQueue.contains(view);
+    };
+    Object.defineProperty(ViewController.prototype, "displayListCount", {
+        /**
+         * 获取当前显示列表长度
+         */
+        get: function () {
+            return this.displayQueue.count;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    /**
+     * 从显示列表删除元素
+     */
+    ViewController.prototype.delFromDisplayList = function (view) {
+        if (this.isInDisplayList(view)) {
+            this.displayQueue.removeItem(view);
+        }
+    };
+    ViewController.prototype.addToDisplayList = function (view) {
+        this.displayQueue.removeItem(view);
+        this.displayQueue.enQueueStart(view);
+    };
+    /**
+     * 添加显示对象到对应组
+     */
+    ViewController.prototype.addViewToGroup = function (groupKey, element) {
+        var groupQueue = this.viewGroupDic.getValue(groupKey);
+        this.addToDisplayList(element);
+        if (!!groupQueue) {
+            groupQueue.enQueue(element);
+            return;
+        }
+        var queue = new Queue();
+        queue.enQueue(element);
+        this.viewGroupDic.add(groupKey, queue);
+    };
+    return ViewController;
+}());
+ViewController.instance = new ViewController();
+__reflect(ViewController.prototype, "ViewController");
+//# sourceMappingURL=ViewController.js.map
